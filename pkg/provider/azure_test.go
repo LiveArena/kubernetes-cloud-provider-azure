@@ -80,7 +80,7 @@ var (
 
 // Test flipServiceInternalAnnotation
 func TestFlipServiceInternalAnnotation(t *testing.T) {
-	svc := getTestService("servicea", v1.ProtocolTCP, nil, false, 80)
+	svc := getTestService("servicea", v1.ProtocolTCP, nil, nil, false, 80)
 	svcUpdated := flipServiceInternalAnnotation(&svc)
 	if !requiresInternalLoadBalancer(svcUpdated) {
 		t.Errorf("Expected svc to be an internal service")
@@ -108,7 +108,7 @@ func TestAddPort(t *testing.T) {
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	svc := getTestService("service1", v1.ProtocolTCP, nil, false, 80)
+	svc := getTestService("service1", v1.ProtocolTCP, nil, nil, false, 80)
 	clusterResources, expectedInterfaces, expectedVirtualMachines := getClusterResources(az, 1, 1)
 	setMockEnv(az, ctrl, expectedInterfaces, expectedVirtualMachines, 1)
 
@@ -531,7 +531,7 @@ func testLoadBalancerServiceDefaultModeSelection(t *testing.T, isInternal bool) 
 			svc = getInternalTestService(svcName, int32(index))
 			validateTestSubnet(t, az, &svc)
 		} else {
-			svc = getTestService(svcName, v1.ProtocolTCP, nil, false, int32(index))
+			svc = getTestService(svcName, v1.ProtocolTCP, nil, nil, false, int32(index))
 		}
 
 		expectedLBName := setMockLBs(az, ctrl, &expectedLBs, "service", 1, index, isInternal)
@@ -600,7 +600,7 @@ func testLoadBalancerServiceAutoModeSelection(t *testing.T, isInternal bool) {
 			svc = getInternalTestService(svcName, int32(index))
 			validateTestSubnet(t, az, &svc)
 		} else {
-			svc = getTestService(svcName, v1.ProtocolTCP, nil, false, int32(index))
+			svc = getTestService(svcName, v1.ProtocolTCP, nil, nil, false, int32(index))
 		}
 		setLoadBalancerAutoModeAnnotation(&svc)
 
@@ -677,7 +677,7 @@ func testLoadBalancerServicesSpecifiedSelection(t *testing.T, isInternal bool) {
 			svc = getInternalTestService(svcName, int32(index))
 			validateTestSubnet(t, az, &svc)
 		} else {
-			svc = getTestService(svcName, v1.ProtocolTCP, nil, false, int32(index))
+			svc = getTestService(svcName, v1.ProtocolTCP, nil, nil, false, int32(index))
 		}
 		lbMode := selectedAvailabilitySetName1
 		setLoadBalancerModeAnnotation(&svc, lbMode)
@@ -738,7 +738,7 @@ func testLoadBalancerMaxRulesServices(t *testing.T, isInternal bool) {
 			svc = getInternalTestService(svcName, int32(index))
 			validateTestSubnet(t, az, &svc)
 		} else {
-			svc = getTestService(svcName, v1.ProtocolTCP, nil, false, int32(index))
+			svc = getTestService(svcName, v1.ProtocolTCP, nil, nil, false, int32(index))
 		}
 
 		setMockLBs(az, ctrl, &expectedLBs, "service", az.Config.MaximumLoadBalancerRuleCount, index, isInternal)
@@ -774,7 +774,7 @@ func testLoadBalancerMaxRulesServices(t *testing.T, isInternal bool) {
 		svc = getInternalTestService(svcName, 8081)
 		validateTestSubnet(t, az, &svc)
 	} else {
-		svc = getTestService(svcName, v1.ProtocolTCP, nil, false, 8081)
+		svc = getTestService(svcName, v1.ProtocolTCP, nil, nil, false, 8081)
 	}
 
 	mockLBsClient := mockloadbalancerclient.NewMockInterface(ctrl)
@@ -825,7 +825,7 @@ func testLoadBalancerServiceAutoModeDeleteSelection(t *testing.T, isInternal boo
 			svc = getInternalTestService(svcName, int32(index))
 			validateTestSubnet(t, az, &svc)
 		} else {
-			svc = getTestService(svcName, v1.ProtocolTCP, nil, false, int32(index))
+			svc = getTestService(svcName, v1.ProtocolTCP, nil, nil, false, int32(index))
 		}
 		setLoadBalancerAutoModeAnnotation(&svc)
 
@@ -852,7 +852,7 @@ func testLoadBalancerServiceAutoModeDeleteSelection(t *testing.T, isInternal boo
 			svc = getInternalTestService(svcName, int32(index))
 			validateTestSubnet(t, az, &svc)
 		} else {
-			svc = getTestService(svcName, v1.ProtocolTCP, nil, false, int32(index))
+			svc = getTestService(svcName, v1.ProtocolTCP, nil, nil, false, int32(index))
 		}
 
 		setLoadBalancerAutoModeAnnotation(&svc)
@@ -926,7 +926,7 @@ func TestReconcileSecurityGroupFromAnyDestinationAddressPrefixToLoadBalancerIP(t
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	svc1 := getTestServiceDualStack("serviceea", v1.ProtocolTCP, nil, 80)
+	svc1 := getTestServiceDualStack("serviceea", v1.ProtocolTCP, nil, nil, 80)
 	setServiceLoadBalancerIP(&svc1, "192.168.0.0")
 	setServiceLoadBalancerIP(&svc1, "fdf8:f535:82e4::53")
 
@@ -947,7 +947,7 @@ func TestReconcileSecurityGroupDynamicLoadBalancerIP(t *testing.T) {
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	svc1 := getTestServiceDualStack("servicea", v1.ProtocolTCP, nil, 80)
+	svc1 := getTestServiceDualStack("servicea", v1.ProtocolTCP, nil, nil, 80)
 	setServiceLoadBalancerIP(&svc1, "")
 
 	sg := getTestSecurityGroupDualStack(az)
@@ -968,7 +968,7 @@ func TestReconcileLoadBalancerAddServicesOnMultipleSubnets(t *testing.T) {
 	clusterResources, expectedInterfaces, expectedVirtualMachines := getClusterResources(az, 1, 1)
 	setMockEnvDualStack(az, ctrl, expectedInterfaces, expectedVirtualMachines, 1)
 
-	svc1 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 8081)
+	svc1 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 8081)
 	svc2 := getInternalTestServiceDualStack("service2", 8081)
 
 	expectedLBs := make([]network.LoadBalancer, 0)
@@ -1066,7 +1066,7 @@ func TestReconcileLoadBalancerNodeHealth(t *testing.T) {
 	clusterResources, expectedInterfaces, expectedVirtualMachines := getClusterResources(az, 1, 1)
 	setMockEnvDualStack(az, ctrl, expectedInterfaces, expectedVirtualMachines, 1)
 
-	svc := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80)
+	svc := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80)
 	svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeLocal
 	svc.Spec.HealthCheckNodePort = int32(32456)
 
@@ -1097,7 +1097,7 @@ func TestReconcileLoadBalancerRemoveService(t *testing.T) {
 	clusterResources, expectedInterfaces, expectedVirtualMachines := getClusterResources(az, 1, 1)
 	setMockEnvDualStack(az, ctrl, expectedInterfaces, expectedVirtualMachines, 1)
 
-	svc := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80, 443)
+	svc := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80, 443)
 
 	expectedLBs := make([]network.LoadBalancer, 0)
 	setMockLBsDualStack(az, ctrl, &expectedLBs, "service", 1, 1, false)
@@ -1137,7 +1137,7 @@ func TestReconcileLoadBalancerRemoveAllPortsRemovesFrontendConfig(t *testing.T) 
 	clusterResources, expectedInterfaces, expectedVirtualMachines := getClusterResources(az, 1, 1)
 	setMockEnvDualStack(az, ctrl, expectedInterfaces, expectedVirtualMachines, 1)
 
-	svc := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80)
+	svc := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80)
 
 	expectedLBs := make([]network.LoadBalancer, 0)
 	setMockLBsDualStack(az, ctrl, &expectedLBs, "service", 1, 1, false)
@@ -1152,7 +1152,7 @@ func TestReconcileLoadBalancerRemoveAllPortsRemovesFrontendConfig(t *testing.T) 
 	assert.Nil(t, err)
 	validateLoadBalancer(t, lb, svc)
 
-	svcUpdated := getTestServiceDualStack("service1", v1.ProtocolTCP, nil)
+	svcUpdated := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil)
 
 	expectedLBs[0].FrontendIPConfigurations = &[]network.FrontendIPConfiguration{}
 	mockLBsClient := mockloadbalancerclient.NewMockInterface(ctrl)
@@ -1188,13 +1188,13 @@ func TestReconcileLoadBalancerRemovesPort(t *testing.T) {
 
 	expectedLBs := make([]network.LoadBalancer, 0)
 	setMockLBsDualStack(az, ctrl, &expectedLBs, "service", 1, 1, false)
-	svc := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80, 443)
+	svc := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80, 443)
 	_, err := az.reconcileLoadBalancer(testClusterName, &svc, clusterResources.nodes, true /* wantLb */)
 	assert.Nil(t, err)
 
 	expectedLBs = make([]network.LoadBalancer, 0)
 	setMockLBsDualStack(az, ctrl, &expectedLBs, "service", 1, 1, false)
-	svcUpdated := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80)
+	svcUpdated := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80)
 	lb, err := az.reconcileLoadBalancer(testClusterName, &svcUpdated, clusterResources.nodes, true /* wantLb */)
 	assert.Nil(t, err)
 
@@ -1210,8 +1210,8 @@ func TestReconcileLoadBalancerMultipleServices(t *testing.T) {
 	clusterResources, expectedInterfaces, expectedVirtualMachines := getClusterResources(az, 1, 1)
 	setMockEnvDualStack(az, ctrl, expectedInterfaces, expectedVirtualMachines, 2)
 
-	svc1 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80, 443)
-	svc2 := getTestServiceDualStack("service2", v1.ProtocolTCP, nil, 81)
+	svc1 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80, 443)
+	svc2 := getTestServiceDualStack("service2", v1.ProtocolTCP, nil, nil, 81)
 
 	expectedLBs := make([]network.LoadBalancer, 0)
 	setMockLBsDualStack(az, ctrl, &expectedLBs, "service", 1, 1, false)
@@ -1251,7 +1251,7 @@ func TestServiceDefaultsToNoSessionPersistence(t *testing.T) {
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	svc := getTestService("service-sa-omitted1", v1.ProtocolTCP, nil, false, 8081)
+	svc := getTestService("service-sa-omitted1", v1.ProtocolTCP, nil, nil, false, 8081)
 	clusterResources, expectedInterfaces, expectedVirtualMachines := getClusterResources(az, 1, 1)
 	setMockEnv(az, ctrl, expectedInterfaces, expectedVirtualMachines, 1)
 
@@ -1306,7 +1306,7 @@ func TestServiceRespectsNoSessionAffinity(t *testing.T) {
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	svc := getTestService("service-sa-none", v1.ProtocolTCP, nil, false, 8081)
+	svc := getTestService("service-sa-none", v1.ProtocolTCP, nil, nil, false, 8081)
 	svc.Spec.SessionAffinity = v1.ServiceAffinityNone
 	clusterResources, expectedInterfaces, expectedVirtualMachines := getClusterResources(az, 1, 1)
 	setMockEnv(az, ctrl, expectedInterfaces, expectedVirtualMachines, 1)
@@ -1369,7 +1369,7 @@ func TestServiceRespectsClientIPSessionAffinity(t *testing.T) {
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	svc := getTestService("service-sa-clientip", v1.ProtocolTCP, nil, false, 8081)
+	svc := getTestService("service-sa-clientip", v1.ProtocolTCP, nil, nil, false, 8081)
 	svc.Spec.SessionAffinity = v1.ServiceAffinityClientIP
 	clusterResources, expectedInterfaces, expectedVirtualMachines := getClusterResources(az, 1, 1)
 	setMockEnv(az, ctrl, expectedInterfaces, expectedVirtualMachines, 1)
@@ -1433,7 +1433,7 @@ func TestReconcileSecurityGroupNewServiceAddsPort(t *testing.T) {
 
 	az := GetTestCloud(ctrl)
 	getTestSecurityGroupDualStack(az)
-	svc1 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80)
+	svc1 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80)
 	clusterResources, expectedInterfaces, expectedVirtualMachines := getClusterResources(az, 1, 1)
 	setMockEnvDualStack(az, ctrl, expectedInterfaces, expectedVirtualMachines, 1)
 	expectedLBs := make([]network.LoadBalancer, 0)
@@ -1486,8 +1486,8 @@ func TestReconcileSecurityGroupRemoveService(t *testing.T) {
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	service1 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 81)
-	service2 := getTestServiceDualStack("service2", v1.ProtocolTCP, nil, 82)
+	service1 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 81)
+	service2 := getTestServiceDualStack("service2", v1.ProtocolTCP, nil, nil, 82)
 	clusterResources, expectedInterfaces, expectedVirtualMachines := getClusterResources(az, 1, 1)
 	setMockEnvDualStack(az, ctrl, expectedInterfaces, expectedVirtualMachines, 2, service1, service2)
 
@@ -1530,7 +1530,7 @@ func TestReconcileSecurityGroupRemoveServiceRemovesPort(t *testing.T) {
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	svc := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80, 443)
+	svc := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80, 443)
 	clusterResources, expectedInterfaces, expectedVirtualMachines := getClusterResources(az, 1, 1)
 	setMockEnvDualStack(az, ctrl, expectedInterfaces, expectedVirtualMachines, 1)
 
@@ -1541,7 +1541,7 @@ func TestReconcileSecurityGroupRemoveServiceRemovesPort(t *testing.T) {
 	mockLBBackendPool.EXPECT().EnsureHostsInPool(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	getTestSecurityGroupDualStack(az, svc)
-	svcUpdated := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80)
+	svcUpdated := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80)
 	expectedLBs := make([]network.LoadBalancer, 0)
 	setMockLBsDualStack(az, ctrl, &expectedLBs, "service", 1, 1, true)
 	mockLBClient := az.LoadBalancerClient.(*mockloadbalancerclient.MockInterface)
@@ -1567,7 +1567,7 @@ func TestReconcileSecurityWithSourceRanges(t *testing.T) {
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	svc := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80, 443)
+	svc := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80, 443)
 	svc.Spec.LoadBalancerSourceRanges = []string{
 		"192.168.0.0/24",
 		"10.0.0.0/32",
@@ -1606,7 +1606,7 @@ func TestReconcileSecurityGroupEtagMismatch(t *testing.T) {
 	cachedSG.Etag = pointer.String("1111111-0000-0000-0000-000000000000")
 	az.nsgCache.Set(pointer.StringDeref(sg.Name, ""), &cachedSG)
 
-	svc1 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80)
+	svc1 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80)
 	clusterResources, expectedInterfaces, expectedVirtualMachines := getClusterResources(az, 1, 1)
 	setMockEnvDualStack(az, ctrl, expectedInterfaces, expectedVirtualMachines, 1)
 	mockSGsClient := mocksecuritygroupclient.NewMockInterface(ctrl)
@@ -1650,7 +1650,7 @@ func TestReconcilePublicIPsWithNewService(t *testing.T) {
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	svc := getTestServiceDualStack("servicea", v1.ProtocolTCP, nil, 80, 443)
+	svc := getTestServiceDualStack("servicea", v1.ProtocolTCP, nil, nil, 80, 443)
 	v4Enabled, v6Enabled := getIPFamiliesEnabled(&svc)
 
 	setMockPublicIPs(az, ctrl, 1, v4Enabled, v6Enabled)
@@ -1682,7 +1682,7 @@ func TestReconcilePublicIPsRemoveService(t *testing.T) {
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	svc := getTestServiceDualStack("servicea", v1.ProtocolTCP, nil, 80, 443)
+	svc := getTestServiceDualStack("servicea", v1.ProtocolTCP, nil, nil, 80, 443)
 	v4Enabled, v6Enabled := getIPFamiliesEnabled(&svc)
 
 	setMockPublicIPs(az, ctrl, 1, v4Enabled, v6Enabled)
@@ -1729,7 +1729,7 @@ func TestReconcilePublicIPsWithExternalAndInternalSwitch(t *testing.T) {
 	validatePublicIPs(t, pips, &svc, true)
 
 	// Update to external service
-	svcUpdated := getTestService("servicea", v1.ProtocolTCP, nil, false, 80)
+	svcUpdated := getTestService("servicea", v1.ProtocolTCP, nil, nil, false, 80)
 	pips, err = az.reconcilePublicIPs(testClusterName, &svcUpdated, "", true /* wantLb*/)
 	assert.Nil(t, err)
 	validatePublicIPs(t, pips, &svcUpdated, true)
@@ -1865,16 +1865,16 @@ func getBackendPort(port int32) int32 {
 }
 
 // TODO: This function should be merged into getTestService()
-func getTestServiceDualStack(identifier string, proto v1.Protocol, annotations map[string]string, requestedPorts ...int32) v1.Service {
-	svc := getTestServiceCommon(identifier, proto, annotations, requestedPorts...)
+func getTestServiceDualStack(identifier string, proto v1.Protocol, annotations map[string]string, labels map[string]string, requestedPorts ...int32) v1.Service {
+	svc := getTestServiceCommon(identifier, proto, annotations, labels, requestedPorts...)
 	svc.Spec.ClusterIPs = []string{"10.0.0.2", "fd00::1907"}
 	svc.Spec.IPFamilies = []v1.IPFamily{v1.IPv4Protocol, v1.IPv6Protocol}
 
 	return svc
 }
 
-func getTestService(identifier string, proto v1.Protocol, annotations map[string]string, isIPv6 bool, requestedPorts ...int32) v1.Service {
-	svc := getTestServiceCommon(identifier, proto, annotations, requestedPorts...)
+func getTestService(identifier string, proto v1.Protocol, annotations map[string]string, labels map[string]string, isIPv6 bool, requestedPorts ...int32) v1.Service {
+	svc := getTestServiceCommon(identifier, proto, annotations, labels, requestedPorts...)
 	svc.Spec.ClusterIP = "10.0.0.2"
 	svc.Spec.IPFamilies = []v1.IPFamily{v1.IPv4Protocol}
 	if isIPv6 {
@@ -1885,7 +1885,7 @@ func getTestService(identifier string, proto v1.Protocol, annotations map[string
 	return svc
 }
 
-func getTestServiceCommon(identifier string, proto v1.Protocol, annotations map[string]string, requestedPorts ...int32) v1.Service {
+func getTestServiceCommon(identifier string, proto v1.Protocol, annotations map[string]string, labels map[string]string, requestedPorts ...int32) v1.Service {
 	ports := []v1.ServicePort{}
 	for _, port := range requestedPorts {
 		ports = append(ports, v1.ServicePort{
@@ -1910,6 +1910,11 @@ func getTestServiceCommon(identifier string, proto v1.Protocol, annotations map[
 	} else {
 		svc.Annotations = annotations
 	}
+	if labels == nil {
+		svc.Labels = make(map[string]string)
+	} else {
+		svc.Labels = labels
+	}
 
 	return svc
 }
@@ -1926,9 +1931,9 @@ func getInternalTestServiceDualStack(identifier string, requestedPorts ...int32)
 func getTestServiceWithAnnotation(identifier string, annotations map[string]string, isDualStack bool, requestedPorts ...int32) v1.Service {
 	var svc v1.Service
 	if isDualStack {
-		svc = getTestServiceDualStack(identifier, v1.ProtocolTCP, nil, requestedPorts...)
+		svc = getTestServiceDualStack(identifier, v1.ProtocolTCP, nil, nil, requestedPorts...)
 	} else {
-		svc = getTestService(identifier, v1.ProtocolTCP, nil, false, requestedPorts...)
+		svc = getTestService(identifier, v1.ProtocolTCP, nil, nil, false, requestedPorts...)
 	}
 	for k, v := range annotations {
 		svc.Annotations[k] = v
@@ -1937,7 +1942,7 @@ func getTestServiceWithAnnotation(identifier string, annotations map[string]stri
 }
 
 func getResourceGroupTestService(identifier, resourceGroup, loadBalancerIP string, requestedPorts ...int32) v1.Service {
-	svc := getTestService(identifier, v1.ProtocolTCP, nil, false, requestedPorts...)
+	svc := getTestService(identifier, v1.ProtocolTCP, nil, nil, false, requestedPorts...)
 	setServiceLoadBalancerIP(&svc, loadBalancerIP)
 	svc.Annotations[consts.ServiceAnnotationLoadBalancerResourceGroup] = resourceGroup
 	return svc
@@ -2761,7 +2766,7 @@ func TestIfServiceSpecifiesSharedRuleAndRuleDoesNotExistItIsCreated(t *testing.T
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	svc := getTestServiceDualStack("servicea", v1.ProtocolTCP, nil, 80)
+	svc := getTestServiceDualStack("servicea", v1.ProtocolTCP, nil, nil, 80)
 	setServiceLoadBalancerIP(&svc, testIPs[0][false])
 	setServiceLoadBalancerIP(&svc, testIPs[0][true])
 	svc.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
@@ -2791,7 +2796,7 @@ func TestIfServiceSpecifiesSharedRuleAndRuleExistsThenTheServicesPortAndAddressA
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	svc := getTestServiceDualStack("servicesr", v1.ProtocolTCP, nil, 80)
+	svc := getTestServiceDualStack("servicesr", v1.ProtocolTCP, nil, nil, 80)
 	setServiceLoadBalancerIP(&svc, testIPs[0][false])
 	setServiceLoadBalancerIP(&svc, testIPs[0][true])
 	svc.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
@@ -2838,12 +2843,12 @@ func TestIfServicesSpecifySharedRuleButDifferentPortsThenSeparateRulesAreCreated
 	defer ctrl.Finish()
 	az := GetTestCloud(ctrl)
 
-	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, 4444)
+	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, nil, 4444)
 	setServiceLoadBalancerIP(&svc1, testIPs[0][false])
 	setServiceLoadBalancerIP(&svc1, testIPs[0][true])
 	svc1.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
 
-	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, 8888)
+	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, nil, 8888)
 	setServiceLoadBalancerIP(&svc2, testIPs[1][false])
 	setServiceLoadBalancerIP(&svc2, testIPs[1][true])
 	svc2.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
@@ -2885,12 +2890,12 @@ func TestIfServicesSpecifySharedRuleButDifferentProtocolsThenSeparateRulesAreCre
 	defer ctrl.Finish()
 	az := GetTestCloud(ctrl)
 
-	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, 4444)
+	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, nil, 4444)
 	setServiceLoadBalancerIP(&svc1, testIPs[0][false])
 	setServiceLoadBalancerIP(&svc1, testIPs[0][true])
 	svc1.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
 
-	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolUDP, nil, 4444)
+	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolUDP, nil, nil, 4444)
 	setServiceLoadBalancerIP(&svc2, testIPs[0][false])
 	setServiceLoadBalancerIP(&svc2, testIPs[0][true])
 	svc2.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
@@ -2942,13 +2947,13 @@ func TestIfServicesSpecifySharedRuleButDifferentSourceAddressesThenSeparateRules
 	defer ctrl.Finish()
 	az := GetTestCloud(ctrl)
 
-	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, 80)
+	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, nil, 80)
 	setServiceLoadBalancerIP(&svc1, testIPs[0][false])
 	setServiceLoadBalancerIP(&svc1, testIPs[0][true])
 	svc1.Spec.LoadBalancerSourceRanges = []string{"192.168.12.0/24", "fd::1:0/112"}
 	svc1.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
 
-	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, 80)
+	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, nil, 80)
 	setServiceLoadBalancerIP(&svc2, testIPs[1][false])
 	setServiceLoadBalancerIP(&svc2, testIPs[1][true])
 	svc2.Spec.LoadBalancerSourceRanges = []string{"192.168.34.0/24", "fd::2:0/112"}
@@ -3010,17 +3015,17 @@ func TestIfServicesSpecifySharedRuleButSomeAreOnDifferentPortsThenRulesAreSepara
 	defer ctrl.Finish()
 	az := GetTestCloud(ctrl)
 
-	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, 4444)
+	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, nil, 4444)
 	setServiceLoadBalancerIP(&svc1, testIPs[0][false])
 	setServiceLoadBalancerIP(&svc1, testIPs[0][true])
 	svc1.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
 
-	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, 8888)
+	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, nil, 8888)
 	setServiceLoadBalancerIP(&svc2, testIPs[1][false])
 	setServiceLoadBalancerIP(&svc2, testIPs[1][true])
 	svc2.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
 
-	svc3 := getTestServiceDualStack("servicesr3", v1.ProtocolTCP, nil, 4444)
+	svc3 := getTestServiceDualStack("servicesr3", v1.ProtocolTCP, nil, nil, 4444)
 	setServiceLoadBalancerIP(&svc3, testIPs[2][false])
 	setServiceLoadBalancerIP(&svc3, testIPs[2][true])
 	svc3.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
@@ -3073,12 +3078,12 @@ func TestIfServiceSpecifiesSharedRuleAndServiceIsDeletedThenTheServicesPortAndAd
 	defer ctrl.Finish()
 	az := GetTestCloud(ctrl)
 
-	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, 80)
+	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, nil, 80)
 	setServiceLoadBalancerIP(&svc1, testIPs[0][false])
 	setServiceLoadBalancerIP(&svc1, testIPs[0][true])
 	svc1.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
 
-	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, 80)
+	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, nil, 80)
 	setServiceLoadBalancerIP(&svc2, testIPs[1][false])
 	setServiceLoadBalancerIP(&svc2, testIPs[1][true])
 	svc2.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
@@ -3117,17 +3122,17 @@ func TestIfSomeServicesShareARuleAndOneIsDeletedItIsRemovedFromTheRightRule(t *t
 	defer ctrl.Finish()
 	az := GetTestCloud(ctrl)
 
-	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, 4444)
+	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, nil, 4444)
 	setServiceLoadBalancerIP(&svc1, testIPs[0][false])
 	setServiceLoadBalancerIP(&svc1, testIPs[0][true])
 	svc1.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
 
-	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, 8888)
+	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, nil, 8888)
 	setServiceLoadBalancerIP(&svc2, testIPs[1][false])
 	setServiceLoadBalancerIP(&svc2, testIPs[1][true])
 	svc2.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
 
-	svc3 := getTestServiceDualStack("servicesr3", v1.ProtocolTCP, nil, 4444)
+	svc3 := getTestServiceDualStack("servicesr3", v1.ProtocolTCP, nil, nil, 4444)
 	setServiceLoadBalancerIP(&svc3, testIPs[2][false])
 	setServiceLoadBalancerIP(&svc3, testIPs[2][true])
 	svc3.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
@@ -3186,17 +3191,17 @@ func TestIfServiceSpecifiesSharedRuleAndLastServiceIsDeletedThenRuleIsDeleted(t 
 	defer ctrl.Finish()
 	az := GetTestCloud(ctrl)
 
-	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, 4444)
+	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, nil, 4444)
 	setServiceLoadBalancerIP(&svc1, testIPs[0][false])
 	setServiceLoadBalancerIP(&svc1, testIPs[0][true])
 	svc1.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
 
-	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, 8888)
+	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, nil, 8888)
 	setServiceLoadBalancerIP(&svc2, testIPs[1][false])
 	setServiceLoadBalancerIP(&svc2, testIPs[1][true])
 	svc2.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
 
-	svc3 := getTestServiceDualStack("servicesr3", v1.ProtocolTCP, nil, 4444)
+	svc3 := getTestServiceDualStack("servicesr3", v1.ProtocolTCP, nil, nil, 4444)
 	setServiceLoadBalancerIP(&svc3, testIPs[2][false])
 	setServiceLoadBalancerIP(&svc3, testIPs[2][true])
 	svc3.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
@@ -3252,27 +3257,27 @@ func TestCanCombineSharedAndPrivateRulesInSameGroup(t *testing.T) {
 	az := GetTestCloud(ctrl)
 	var err error
 
-	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, 4444)
+	svc1 := getTestServiceDualStack("servicesr1", v1.ProtocolTCP, nil, nil, 4444)
 	setServiceLoadBalancerIP(&svc1, testIPs[0][false])
 	setServiceLoadBalancerIP(&svc1, testIPs[0][true])
 	svc1.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
 
-	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, 8888)
+	svc2 := getTestServiceDualStack("servicesr2", v1.ProtocolTCP, nil, nil, 8888)
 	setServiceLoadBalancerIP(&svc2, testIPs[1][false])
 	setServiceLoadBalancerIP(&svc2, testIPs[1][true])
 	svc2.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
 
-	svc3 := getTestServiceDualStack("servicesr3", v1.ProtocolTCP, nil, 4444)
+	svc3 := getTestServiceDualStack("servicesr3", v1.ProtocolTCP, nil, nil, 4444)
 	setServiceLoadBalancerIP(&svc3, testIPs[2][false])
 	setServiceLoadBalancerIP(&svc3, testIPs[2][true])
 	svc3.Annotations[consts.ServiceAnnotationSharedSecurityRule] = consts.TrueAnnotationValue
 
-	svc4 := getTestServiceDualStack("servicesr4", v1.ProtocolTCP, nil, 4444)
+	svc4 := getTestServiceDualStack("servicesr4", v1.ProtocolTCP, nil, nil, 4444)
 	setServiceLoadBalancerIP(&svc4, testIPs[3][false])
 	setServiceLoadBalancerIP(&svc4, testIPs[3][true])
 	svc4.Annotations[consts.ServiceAnnotationSharedSecurityRule] = "false"
 
-	svc5 := getTestServiceDualStack("servicesr5", v1.ProtocolTCP, nil, 8888)
+	svc5 := getTestServiceDualStack("servicesr5", v1.ProtocolTCP, nil, nil, 8888)
 	setServiceLoadBalancerIP(&svc5, testIPs[3][false])
 	setServiceLoadBalancerIP(&svc5, testIPs[3][true])
 	svc5.Annotations[consts.ServiceAnnotationSharedSecurityRule] = "false"

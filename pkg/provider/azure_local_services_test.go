@@ -148,7 +148,7 @@ func TestLoadBalancerBackendPoolUpdater(t *testing.T) {
 			if tc.changeLB {
 				cloud.localServiceNameToServiceInfoMap.Store("ns1/svc1", &serviceInfo{lbName: "lb2"})
 			}
-			svc := getTestService("svc1", v1.ProtocolTCP, nil, false)
+			svc := getTestService("svc1", v1.ProtocolTCP, nil, nil, false)
 			client := fake.NewSimpleClientset(&svc)
 			informerFactory := informers.NewSharedInformerFactory(client, 0)
 			cloud.serviceLister = informerFactory.Core().V1().Services().Lister()
@@ -316,7 +316,7 @@ func TestLoadBalancerBackendPoolUpdaterFailed(t *testing.T) {
 			cloud := GetTestCloud(ctrl)
 			cloud.localServiceNameToServiceInfoMap = sync.Map{}
 			cloud.localServiceNameToServiceInfoMap.Store("ns1/svc1", &serviceInfo{lbName: "lb1"})
-			svc := getTestService("svc1", v1.ProtocolTCP, nil, false)
+			svc := getTestService("svc1", v1.ProtocolTCP, nil, nil, false)
 			client := fake.NewSimpleClientset(&svc)
 			informerFactory := informers.NewSharedInformerFactory(client, 0)
 			cloud.serviceLister = informerFactory.Core().V1().Services().Lister()
@@ -476,7 +476,7 @@ func TestEndpointSlicesInformer(t *testing.T) {
 			if !tc.notLocal {
 				cloud.localServiceNameToServiceInfoMap.Store("test/svc1", &serviceInfo{lbName: "lb1"})
 			}
-			svc := getTestService("svc1", v1.ProtocolTCP, nil, false)
+			svc := getTestService("svc1", v1.ProtocolTCP, nil, nil, false)
 			client := fake.NewSimpleClientset(&svc, tc.existingEPS)
 			informerFactory := informers.NewSharedInformerFactory(client, 0)
 			cloud.serviceLister = informerFactory.Core().V1().Services().Lister()
@@ -529,7 +529,7 @@ func TestGetBackendPoolNamesAndIDsForService(t *testing.T) {
 	cloud.MultipleStandardLoadBalancerConfigurations = []MultipleStandardLoadBalancerConfiguration{
 		{},
 	}
-	svc := getTestService("test", v1.ProtocolTCP, nil, false)
+	svc := getTestService("test", v1.ProtocolTCP, nil, nil, false)
 	svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyLocal
 	_ = cloud.getBackendPoolNamesForService(&svc, "test")
 	_ = cloud.getBackendPoolIDsForService(&svc, "test", "lb")
@@ -556,7 +556,7 @@ func TestCheckAndApplyLocalServiceBackendPoolUpdates(t *testing.T) {
 		t.Run(tc.description, func(t *testing.T) {
 			cloud := GetTestCloud(ctrl)
 			cloud.localServiceNameToServiceInfoMap.Store("default/svc1", &serviceInfo{lbName: "lb1"})
-			svc := getTestService("svc1", v1.ProtocolTCP, nil, false)
+			svc := getTestService("svc1", v1.ProtocolTCP, nil, nil, false)
 			var client kubernetes.Interface
 			if tc.existingEPS != nil {
 				client = fake.NewSimpleClientset(&svc, tc.existingEPS)

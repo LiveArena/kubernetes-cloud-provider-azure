@@ -884,14 +884,14 @@ func TestGetBackendPoolName(t *testing.T) {
 	}{
 		{
 			name:             "GetBackendPoolName should return <clusterName>-IPv6",
-			service:          getTestService("test1", v1.ProtocolTCP, nil, true, 80),
+			service:          getTestService("test1", v1.ProtocolTCP, nil, nil, true, 80),
 			clusterName:      "azure",
 			expectedPoolName: "azure-IPv6",
 			isIPv6:           true,
 		},
 		{
 			name:             "GetBackendPoolName should return <clusterName>",
-			service:          getTestService("test1", v1.ProtocolTCP, nil, false, 80),
+			service:          getTestService("test1", v1.ProtocolTCP, nil, nil, false, 80),
 			clusterName:      "azure",
 			expectedPoolName: "azure",
 			isIPv6:           false,
@@ -912,7 +912,7 @@ func TestGetBackendPoolNames(t *testing.T) {
 	}{
 		{
 			name:              "GetBackendPoolNames should return 2 backend pool names",
-			service:           getTestService("test1", v1.ProtocolTCP, nil, true, 80),
+			service:           getTestService("test1", v1.ProtocolTCP, nil, nil, true, 80),
 			clusterName:       "azure",
 			expectedPoolNames: map[bool]string{consts.IPVersionIPv4: "azure", consts.IPVersionIPv6: "azure-IPv6"},
 		},
@@ -1600,7 +1600,7 @@ func TestStandardEnsureBackendPoolDeleted(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	cloud := GetTestCloud(ctrl)
-	service := getTestService("test", v1.ProtocolTCP, nil, false, 80)
+	service := getTestService("test", v1.ProtocolTCP, nil, nil, false, 80)
 	backendPoolID := "backendPoolID"
 	vmSetName := "AS"
 

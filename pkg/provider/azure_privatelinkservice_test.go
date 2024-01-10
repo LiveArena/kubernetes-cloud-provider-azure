@@ -469,7 +469,7 @@ func TestSafeDeletePLS(t *testing.T) {
 		mockPLSsClient.EXPECT().DeletePEConnection(gomock.Any(), "rg", "testpls", "pe1").Return(nil).Times(1)
 		mockPLSsClient.EXPECT().DeletePEConnection(gomock.Any(), "rg", "testpls", "pe2").Return(nil).Times(1)
 		mockPLSsClient.EXPECT().Delete(gomock.Any(), "rg", "testpls").Return(nil).Times(1)
-		service := getTestService("test1", v1.ProtocolTCP, nil, false, 80)
+		service := getTestService("test1", v1.ProtocolTCP, nil, nil, false, 80)
 		rerr := az.safeDeletePLS(test.pls, &service)
 		assert.Equal(t, test.expectedError, rerr != nil, "TestCase[%d]: %s", i, test.desc)
 	}

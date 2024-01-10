@@ -75,7 +75,7 @@ func TestExistsPip(t *testing.T) {
 	}{
 		{
 			"IPv4 exists",
-			getTestService("service", v1.ProtocolTCP, nil, false, 80),
+			getTestService("service", v1.ProtocolTCP, nil, nil, false, 80),
 			func(client *mockpublicipclient.MockInterface) {
 				pips := []network.PublicIPAddress{
 					{
@@ -91,7 +91,7 @@ func TestExistsPip(t *testing.T) {
 		},
 		{
 			"IPv4 not exists",
-			getTestService("service", v1.ProtocolTCP, nil, false, 80),
+			getTestService("service", v1.ProtocolTCP, nil, nil, false, 80),
 			func(client *mockpublicipclient.MockInterface) {
 				client.EXPECT().List(gomock.Any(), "rg").Return([]network.PublicIPAddress{}, nil).MaxTimes(2)
 			},
@@ -99,7 +99,7 @@ func TestExistsPip(t *testing.T) {
 		},
 		{
 			"IPv6 exists",
-			getTestService("service", v1.ProtocolTCP, nil, true, 80),
+			getTestService("service", v1.ProtocolTCP, nil, nil, true, 80),
 			func(client *mockpublicipclient.MockInterface) {
 				pips := []network.PublicIPAddress{
 					{
@@ -115,7 +115,7 @@ func TestExistsPip(t *testing.T) {
 		},
 		{
 			"IPv6 not exists - should not have suffix",
-			getTestService("service", v1.ProtocolTCP, nil, true, 80),
+			getTestService("service", v1.ProtocolTCP, nil, nil, true, 80),
 			func(client *mockpublicipclient.MockInterface) {
 				pips := []network.PublicIPAddress{
 					{
@@ -131,7 +131,7 @@ func TestExistsPip(t *testing.T) {
 		},
 		{
 			"DualStack exists",
-			getTestServiceDualStack("service", v1.ProtocolTCP, nil, 80),
+			getTestServiceDualStack("service", v1.ProtocolTCP, nil, nil, 80),
 			func(client *mockpublicipclient.MockInterface) {
 				pips := []network.PublicIPAddress{
 					{
@@ -153,7 +153,7 @@ func TestExistsPip(t *testing.T) {
 		},
 		{
 			"DualStack, IPv4 not exists",
-			getTestServiceDualStack("service", v1.ProtocolTCP, nil, 80),
+			getTestServiceDualStack("service", v1.ProtocolTCP, nil, nil, 80),
 			func(client *mockpublicipclient.MockInterface) {
 				pips := []network.PublicIPAddress{
 					{
@@ -222,7 +222,7 @@ func TestGetLoadBalancer(t *testing.T) {
 	}{
 		{
 			desc:           "GetLoadBalancer should return true when only public IP exists",
-			service:        getTestService("service", v1.ProtocolTCP, nil, false, 80),
+			service:        getTestService("service", v1.ProtocolTCP, nil, nil, false, 80),
 			existingLBs:    []network.LoadBalancer{lb1},
 			pipExists:      true,
 			expectedGotLB:  true,
@@ -230,7 +230,7 @@ func TestGetLoadBalancer(t *testing.T) {
 		},
 		{
 			desc:           "GetLoadBalancer should return false when neither public IP nor LB exists",
-			service:        getTestService("service", v1.ProtocolTCP, nil, false, 80),
+			service:        getTestService("service", v1.ProtocolTCP, nil, nil, false, 80),
 			existingLBs:    []network.LoadBalancer{lb1},
 			pipExists:      false,
 			expectedGotLB:  false,
@@ -238,7 +238,7 @@ func TestGetLoadBalancer(t *testing.T) {
 		},
 		{
 			desc:          "GetLoadBalancer should return true when external service finds external LB",
-			service:       getTestService("service", v1.ProtocolTCP, nil, false, 80),
+			service:       getTestService("service", v1.ProtocolTCP, nil, nil, false, 80),
 			existingLBs:   []network.LoadBalancer{lb2},
 			pipExists:     true,
 			expectedGotLB: true,
@@ -261,7 +261,7 @@ func TestGetLoadBalancer(t *testing.T) {
 		},
 		{
 			desc:          "GetLoadBalancer should return true when external service finds previous internal LB",
-			service:       getTestService("service", v1.ProtocolTCP, nil, false, 80),
+			service:       getTestService("service", v1.ProtocolTCP, nil, nil, false, 80),
 			existingLBs:   []network.LoadBalancer{lb3},
 			expectedGotLB: true,
 			expectedStatus: &v1.LoadBalancerStatus{
@@ -688,7 +688,7 @@ func TestEnsureLoadBalancerDeleted(t *testing.T) {
 	}{
 		{
 			desc:        "external service then flipped to internal should be created and deleted successfully",
-			service:     getTestService("service1", v1.ProtocolTCP, nil, false, 80),
+			service:     getTestService("service1", v1.ProtocolTCP, nil, nil, false, 80),
 			flipService: true,
 		},
 		{
@@ -699,7 +699,7 @@ func TestEnsureLoadBalancerDeleted(t *testing.T) {
 		},
 		{
 			desc:    "external service should be created and deleted successfully",
-			service: getTestService("service3", v1.ProtocolTCP, nil, false, 80),
+			service: getTestService("service3", v1.ProtocolTCP, nil, nil, false, 80),
 		},
 		{
 			desc:          "internal service should be created and deleted successfully",
@@ -1012,7 +1012,7 @@ func TestServiceOwnsPublicIP(t *testing.T) {
 
 	for i, c := range tests {
 		t.Run(c.desc, func(t *testing.T) {
-			service := getTestService(c.serviceName, v1.ProtocolTCP, nil, false, 80)
+			service := getTestService(c.serviceName, v1.ProtocolTCP, nil, nil, false, 80)
 			if c.serviceLBIP != "" {
 				setServiceLoadBalancerIP(&service, c.serviceLBIP)
 			}
@@ -1775,7 +1775,7 @@ func TestGetServiceLoadBalancerMultiSLB(t *testing.T) {
 					},
 				},
 			},
-			service: getTestService("test1", v1.ProtocolTCP, nil, false, 80),
+			service: getTestService("test1", v1.ProtocolTCP, nil, nil, false, 80),
 			local:   true,
 			multiSLBConfigs: []MultipleStandardLoadBalancerConfiguration{
 				{
@@ -1885,7 +1885,7 @@ func TestGetServiceLoadBalancerCommon(t *testing.T) {
 					},
 				},
 			},
-			service: getTestService("service1", v1.ProtocolTCP, nil, false, 80),
+			service: getTestService("service1", v1.ProtocolTCP, nil, nil, false, 80),
 			wantLB:  false,
 			expectedLB: &network.LoadBalancer{
 				Name: pointer.String("testCluster"),
@@ -1936,7 +1936,7 @@ func TestGetServiceLoadBalancerCommon(t *testing.T) {
 					},
 				},
 			},
-			service:     getTestService("service1", v1.ProtocolTCP, nil, false, 80),
+			service:     getTestService("service1", v1.ProtocolTCP, nil, nil, false, 80),
 			annotations: map[string]string{consts.ServiceAnnotationLoadBalancerMode: "__auto__"},
 			wantLB:      true,
 			expectedLB: &network.LoadBalancer{
@@ -1952,7 +1952,7 @@ func TestGetServiceLoadBalancerCommon(t *testing.T) {
 		},
 		{
 			desc:    "getServiceLoadBalancer shall create a new lb otherwise",
-			service: getTestService("service1", v1.ProtocolTCP, nil, false, 80),
+			service: getTestService("service1", v1.ProtocolTCP, nil, nil, false, 80),
 			expectedLB: &network.LoadBalancer{
 				Name:                         pointer.String("testCluster"),
 				Location:                     pointer.String("westus"),
@@ -2002,7 +2002,7 @@ func TestGetServiceLoadBalancerCommon(t *testing.T) {
 }
 
 func TestGetServiceLoadBalancerWithExtendedLocation(t *testing.T) {
-	service := getTestService("service1", v1.ProtocolTCP, nil, false, 80)
+	service := getTestService("service1", v1.ProtocolTCP, nil, nil, false, 80)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -2190,7 +2190,7 @@ func TestIsFrontendIPChanged(t *testing.T) {
 				FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{},
 			},
 			lbFrontendIPConfigName: "btest1-name",
-			service:                getTestService("test1", v1.ProtocolTCP, nil, false, 80),
+			service:                getTestService("test1", v1.ProtocolTCP, nil, nil, false, 80),
 			loadBalancerIP:         "1.1.1.1",
 			existingPIPs: []network.PublicIPAddress{
 				{
@@ -2214,7 +2214,7 @@ func TestIsFrontendIPChanged(t *testing.T) {
 				},
 			},
 			lbFrontendIPConfigName: "btest1-name",
-			service:                getTestService("test1", v1.ProtocolTCP, nil, false, 80),
+			service:                getTestService("test1", v1.ProtocolTCP, nil, nil, false, 80),
 			loadBalancerIP:         "1.1.1.1",
 			existingPIPs: []network.PublicIPAddress{
 				{
@@ -2241,7 +2241,7 @@ func TestIsFrontendIPChanged(t *testing.T) {
 				},
 			},
 			lbFrontendIPConfigName: "btest1-name",
-			service:                getTestService("test1", v1.ProtocolTCP, nil, false, 80),
+			service:                getTestService("test1", v1.ProtocolTCP, nil, nil, false, 80),
 			loadBalancerIP:         "1.1.1.1",
 			existingPIPs: []network.PublicIPAddress{
 				{
@@ -2337,7 +2337,7 @@ func TestDeterminePublicIPName(t *testing.T) {
 	for _, test := range testCases {
 		t.Run(test.desc, func(t *testing.T) {
 			az := GetTestCloud(ctrl)
-			service := getTestService("test1", v1.ProtocolTCP, nil, false, 80)
+			service := getTestService("test1", v1.ProtocolTCP, nil, nil, false, 80)
 			setServiceLoadBalancerIP(&service, test.loadBalancerIP)
 
 			mockPIPsClient := az.PublicIPAddressesClient.(*mockpublicipclient.MockInterface)
@@ -2371,14 +2371,14 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 	}{
 		{
 			desc:            "getExpectedLBRules shall return corresponding probe and lbRule(blb)",
-			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{}, 80),
+			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{}, nil, 80),
 			loadBalancerSku: "basic",
 			expectedProbes:  getDefaultTestProbes("Tcp", ""),
 			expectedRules:   getDefaultTestRules(false),
 		},
 		{
 			desc:            "getExpectedLBRules shall return tcp probe on non supported protocols when basic lb sku is used",
-			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{}, 80),
+			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{}, nil, 80),
 			loadBalancerSku: "basic",
 			probeProtocol:   "Mongodb",
 			expectedRules:   getDefaultTestRules(false),
@@ -2386,7 +2386,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 		},
 		{
 			desc:            "getExpectedLBRules shall return tcp probe on https protocols when basic lb sku is used",
-			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{}, 80),
+			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{}, nil, 80),
 			loadBalancerSku: "basic",
 			probeProtocol:   "Https",
 			expectedRules:   getDefaultTestRules(false),
@@ -2394,20 +2394,20 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 		},
 		{
 			desc:            "getExpectedLBRules shall return error (slb with external mode and SCTP)",
-			service:         getTestServiceDualStack("test1", v1.ProtocolSCTP, map[string]string{}, 80),
+			service:         getTestServiceDualStack("test1", v1.ProtocolSCTP, map[string]string{}, nil, 80),
 			loadBalancerSku: "standard",
 			expectedErr:     true,
 		},
 		{
 			desc:            "getExpectedLBRules shall return corresponding probe and lbRule(slb with tcp reset)",
-			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, nil, 80),
+			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, nil, nil, 80),
 			loadBalancerSku: "standard",
 			expectedProbes:  getDefaultTestProbes("Tcp", ""),
 			expectedRules:   getDefaultTestRules(true),
 		},
 		{
 			desc:            "getExpectedLBRules shall respect the probe protocol and path configuration in the config file",
-			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, nil, 80),
+			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, nil, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Http",
 			probePath:       "/healthy",
@@ -2416,7 +2416,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 		},
 		{
 			desc:            "getExpectedLBRules shall respect the probe protocol and path configuration in the config file",
-			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, nil, 80),
+			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, nil, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Https",
 			probePath:       "/healthy1",
@@ -2427,7 +2427,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			desc: "getExpectedLBRules shall return corresponding probe and lbRule (slb with IPv6)",
 			service: getTestService("test1", v1.ProtocolTCP, map[string]string{
 				consts.ServiceAnnotationLoadBalancerInternal: "true",
-			}, true, 80),
+			}, nil, true, 80),
 			loadBalancerSku: "standard",
 			expectedProbes: map[bool][]network.Probe{
 				// Use false as IPv6 param but it is a IPv6 probe.
@@ -2440,7 +2440,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.ServiceAnnotationLoadBalancerEnableHighAvailabilityPorts: "true",
 				consts.ServiceAnnotationLoadBalancerInternal:                    "true",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			expectedProbes:  getDefaultTestProbes("Tcp", ""),
 			expectedRules: map[bool][]network.LoadBalancingRule{
@@ -2453,7 +2453,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolSCTP, map[string]string{
 				consts.ServiceAnnotationLoadBalancerEnableHighAvailabilityPorts: "true",
 				consts.ServiceAnnotationLoadBalancerInternal:                    "true",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			expectedRules: map[bool][]network.LoadBalancingRule{
 				consts.IPVersionIPv4: getHATestRules(true, false, v1.ProtocolSCTP, consts.IPVersionIPv4, true),
@@ -2465,7 +2465,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.ServiceAnnotationLoadBalancerEnableHighAvailabilityPorts: "true",
 				consts.ServiceAnnotationLoadBalancerInternal:                    "true",
-			}, 80, 8080),
+			}, nil, 80, 8080),
 			loadBalancerSku: "standard",
 			expectedProbes:  getDefaultTestProbes("Tcp", ""),
 			expectedRules: map[bool][]network.LoadBalancingRule{
@@ -2475,7 +2475,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 		},
 		{
 			desc:            "getExpectedLBRules should leave probe path empty when using TCP probe",
-			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, nil, 80),
+			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, nil, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Tcp",
 			expectedProbes:  getDefaultTestProbes("Tcp", ""),
@@ -2485,7 +2485,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			desc: "getExpectedLBRules should return tcp probe when invalid protocol is defined",
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsRequestPath): "/healthy1",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "TCP1",
 			expectedProbes:  getDefaultTestProbes("Tcp", ""),
@@ -2495,7 +2495,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			desc: "getExpectedLBRules should return tcp probe when invalid protocol is defined",
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsRequestPath): "/healthy1",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "basic",
 			probeProtocol:   "TCP1",
 			expectedProbes:  getDefaultTestProbes("Tcp", ""),
@@ -2506,7 +2506,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsRequestPath): "/healthy1",
 				consts.ServiceAnnotationLoadBalancerHealthProbeProtocol:                              "https",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			expectedProbes:  getDefaultTestProbes("Https", "/healthy1"),
 			expectedRules:   getDefaultTestRules(true),
@@ -2516,7 +2516,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsRequestPath): "/healthy1",
 				consts.ServiceAnnotationLoadBalancerHealthProbeProtocol:                              "http",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			expectedProbes:  getDefaultTestProbes("Http", "/healthy1"),
 			expectedRules:   getDefaultTestRules(true),
@@ -2526,7 +2526,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsRequestPath): "/healthy1",
 				consts.ServiceAnnotationLoadBalancerHealthProbeProtocol:                              "tcp",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			expectedProbes:  getDefaultTestProbes("Tcp", ""),
 			expectedRules:   getDefaultTestRules(true),
@@ -2535,7 +2535,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			desc: "getExpectedLBRules should return correct rule when deprecated annotations are added",
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsRequestPath): "/healthy1",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Https",
 			expectedProbes:  getDefaultTestProbes("Https", "/healthy1"),
@@ -2546,7 +2546,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.ServiceAnnotationLoadBalancerHealthProbeRequestPath:                           "/healthy1",
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsRequestPath): "/healthy2",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Https",
 			expectedProbes:  getDefaultTestProbes("Https", "/healthy2"),
@@ -2558,7 +2558,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsProbeInterval): "10",
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsNumOfProbe):    "20",
 				consts.ServiceAnnotationLoadBalancerHealthProbeProtocol:                                "https",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Tcp",
 			expectedErr:     true,
@@ -2569,7 +2569,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsProbeInterval): "10",
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsNumOfProbe):    "20",
 				consts.ServiceAnnotationLoadBalancerHealthProbeProtocol:                                "tcp",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Tcp",
 			expectedErr:     true,
@@ -2579,7 +2579,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsProbeInterval): "20",
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsNumOfProbe):    "5",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Https",
 			probePath:       "/healthy1",
@@ -2591,7 +2591,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsProbeInterval): "20",
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsNumOfProbe):    "5",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Http",
 			expectedProbes:  getTestProbes("Http", "/", pointer.Int32(20), pointer.Int32(80), pointer.Int32(10080), pointer.Int32(5)),
@@ -2602,7 +2602,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsProbeInterval): "20",
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsNumOfProbe):    "5",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Tcp",
 			expectedProbes:  getTestProbes("Tcp", "", pointer.Int32(20), pointer.Int32(80), pointer.Int32(10080), pointer.Int32(5)),
@@ -2613,7 +2613,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsProbeInterval): "20",
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsNumOfProbe):    "5a",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Tcp",
 			expectedErr:     true,
@@ -2623,7 +2623,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsProbeInterval): "1",
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsNumOfProbe):    "5",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Tcp",
 			expectedErr:     true,
@@ -2633,7 +2633,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsProbeInterval): "10",
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsNumOfProbe):    "1",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Tcp",
 			expectedErr:     true,
@@ -2643,14 +2643,14 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsProbeInterval): "10",
 				consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsNumOfProbe):    "20",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Tcp",
 			expectedErr:     true,
 		},
 		{
 			desc:            "getExpectedLBRules should return correct rule when floating ip annotations are added",
-			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationDisableLoadBalancerFloatingIP: "true"}, 80),
+			service:         getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationDisableLoadBalancerFloatingIP: "true"}, nil, 80),
 			loadBalancerSku: "basic",
 			expectedRules: map[bool][]network.LoadBalancingRule{
 				consts.IPVersionIPv4: {getFloatingIPTestRule(false, false, 80, consts.IPVersionIPv4)},
@@ -2662,7 +2662,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			desc: "getExpectedLBRules should prioritize port specific probe protocol over defaults",
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				"service.beta.kubernetes.io/port_80_health-probe_protocol": "HtTp",
-			}, 80),
+			}, nil, 80),
 			expectedRules:  getDefaultTestRules(false),
 			expectedProbes: getDefaultTestProbes("Http", "/"),
 		},
@@ -2670,7 +2670,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			desc: "getExpectedLBRules should disable tcp reset when annotation is set",
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				"service.beta.kubernetes.io/azure-load-balancer-disable-tcp-reset": "true",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			expectedRules:   getTCPResetTestRules(false),
 			expectedProbes:  getDefaultTestProbes("Tcp", ""),
@@ -2679,7 +2679,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			desc: "getExpectedLBRules should prioritize port specific probe protocol over appProtocol",
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				"service.beta.kubernetes.io/port_80_health-probe_protocol": "HtTp",
-			}, 80),
+			}, nil, 80),
 			probeProtocol:  "Mongodb",
 			expectedRules:  getDefaultTestRules(false),
 			expectedProbes: getDefaultTestProbes("Http", "/"),
@@ -2689,7 +2689,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				"service.beta.kubernetes.io/port_80_health-probe_protocol":             "HtTpS",
 				"service.beta.kubernetes.io/azure-load-balancer-health-probe-protocol": "TcP",
-			}, 80),
+			}, nil, 80),
 			loadBalancerSku: "standard",
 			probeProtocol:   "Https",
 			expectedRules:   getDefaultTestRules(true),
@@ -2699,7 +2699,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			desc: "getExpectedLBRules should default to Tcp on invalid port specific probe protocol",
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				"service.beta.kubernetes.io/port_80_health-probe_protocol": "FooBar",
-			}, 80),
+			}, nil, 80),
 			probeProtocol:  "Http",
 			expectedRules:  getDefaultTestRules(false),
 			expectedProbes: getDefaultTestProbes("Tcp", ""),
@@ -2708,7 +2708,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			desc: "getExpectedLBRules should support customize health probe port in multi-port service",
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				"service.beta.kubernetes.io/port_8000_health-probe_port": "port-tcp-80",
-			}, 80, 8000),
+			}, nil, 80, 8000),
 			expectedRules: map[bool][]network.LoadBalancingRule{
 				consts.IPVersionIPv4: {getTestRule(false, 80, consts.IPVersionIPv4), getTestRule(false, 8000, consts.IPVersionIPv4)},
 				consts.IPVersionIPv6: {getTestRule(false, 80, consts.IPVersionIPv6), getTestRule(false, 8000, consts.IPVersionIPv6)},
@@ -2728,7 +2728,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			desc: "getExpectedLBRules should support customize health probe port in multi-port service",
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				"service.beta.kubernetes.io/port_8000_health-probe_port": "80",
-			}, 80, 8000),
+			}, nil, 80, 8000),
 			expectedRules: map[bool][]network.LoadBalancingRule{
 				consts.IPVersionIPv4: {
 					getTestRule(false, 80, consts.IPVersionIPv4),
@@ -2754,7 +2754,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			desc: "getExpectedLBRules should not generate probe rule when no health probe rule is specified.",
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				"service.beta.kubernetes.io/port_8000_no_probe_rule": "true",
-			}, 80, 8000),
+			}, nil, 80, 8000),
 			expectedRules: map[bool][]network.LoadBalancingRule{
 				consts.IPVersionIPv4: {
 					getTestRule(false, 80, consts.IPVersionIPv4),
@@ -2786,7 +2786,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			desc: "getExpectedLBRules should not generate lb rule and health probe rule when no lb rule is specified.",
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				"service.beta.kubernetes.io/port_8000_no_lb_rule": "true",
-			}, 80, 8000),
+			}, nil, 80, 8000),
 			expectedRules: map[bool][]network.LoadBalancingRule{
 				consts.IPVersionIPv4: {
 					getTestRule(false, 80, consts.IPVersionIPv4),
@@ -2808,7 +2808,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			desc: "getExpectedLBRules should support customize health probe port ",
 			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{
 				"service.beta.kubernetes.io/port_8000_health-probe_port": "5080",
-			}, 80, 8000),
+			}, nil, 80, 8000),
 			expectedRules: map[bool][]network.LoadBalancingRule{
 				consts.IPVersionIPv4: {
 					getTestRule(false, 80, consts.IPVersionIPv4),
@@ -2852,7 +2852,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 			consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsProbeInterval): "10",
 			consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsNumOfProbe):    "10",
 			consts.ServiceAnnotationLoadBalancerIdleTimeout:                                        "5",
-		}, 80),
+		}, nil, 80),
 		loadBalancerSku: "standard",
 		probeProtocol:   "Tcp",
 		expectedProbes:  getTestProbes("Tcp", "", pointer.Int32(10), pointer.Int32(80), pointer.Int32(10080), pointer.Int32(10)),
@@ -2885,7 +2885,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 		consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsProtocol):      "https",
 		consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsRequestPath):   "/broken/local/path",
 		consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsNumOfProbe):    "10",
-	}, 80, 443, 421)
+	}, nil, 80, 443, 421)
 	svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeLocal
 	svc.Spec.HealthCheckNodePort = 34567
 	probes := getTestProbes("Http", "/healthz", pointer.Int32(5), pointer.Int32(34567), pointer.Int32(34567), pointer.Int32(2))
@@ -2924,7 +2924,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 		consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsProtocol):      "https",
 		consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsRequestPath):   "/broken/local/path",
 		consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsNumOfProbe):    "15",
-	}, 80)
+	}, nil, 80)
 	svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeLocal
 	svc.Spec.HealthCheckNodePort = 34567
 	probes = getTestProbes("Https", "/broken/local/path", pointer.Int32(7), pointer.Int32(80), pointer.Int32(10080), pointer.Int32(15))
@@ -2956,7 +2956,7 @@ func TestReconcileLoadBalancerRuleCommon(t *testing.T) {
 		consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsRequestPath):   "/broken/local/path",
 		consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsNumOfProbe):    "15",
 		consts.BuildHealthProbeAnnotationKeyForPort(80, consts.HealthProbeParamsPort):          "421",
-	}, 80)
+	}, nil, 80)
 	svc.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeLocal
 	svc.Spec.HealthCheckNodePort = 34567
 	probes = getTestProbes("Https", "/broken/local/path", pointer.Int32(7), pointer.Int32(80), pointer.Int32(421), pointer.Int32(15))
@@ -3283,10 +3283,10 @@ func TestReconcileLoadBalancerCommon(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	service1 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80)
+	service1 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80)
 	basicLb1 := getTestLoadBalancerDualStack(pointer.String("testCluster"), pointer.String("rg"), pointer.String("testCluster"), pointer.String("aservice1"), service1, "Basic")
 
-	service2 := getTestServiceDualStack("test1", v1.ProtocolTCP, nil, 80)
+	service2 := getTestServiceDualStack("test1", v1.ProtocolTCP, nil, nil, 80)
 	basicLb2 := getTestLoadBalancerDualStack(pointer.String("lb1"), pointer.String("rg"), pointer.String("testCluster"), pointer.String("bservice1"), service2, "Basic")
 	basicLb2.Name = pointer.String("testCluster")
 	basicLb2.FrontendIPConfigurations = &[]network.FrontendIPConfiguration{
@@ -3306,7 +3306,7 @@ func TestReconcileLoadBalancerCommon(t *testing.T) {
 		},
 	}
 
-	service3 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80)
+	service3 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80)
 	modifiedLbs := make([]network.LoadBalancer, 2)
 	for i := range modifiedLbs {
 		modifiedLbs[i] = getTestLoadBalancerDualStack(pointer.String("testCluster"), pointer.String("rg"), pointer.String("testCluster"), pointer.String("aservice1"), service3, "Basic")
@@ -3403,7 +3403,7 @@ func TestReconcileLoadBalancerCommon(t *testing.T) {
 		},
 	}
 
-	service4 := getTestServiceDualStack("service1", v1.ProtocolTCP, map[string]string{}, 80)
+	service4 := getTestServiceDualStack("service1", v1.ProtocolTCP, map[string]string{}, nil, 80)
 	existingSLB := getTestLoadBalancerDualStack(pointer.String("testCluster"), pointer.String("rg"), pointer.String("testCluster"), pointer.String("aservice1"), service4, "Standard")
 	existingSLB.FrontendIPConfigurations = &[]network.FrontendIPConfiguration{
 		{
@@ -3504,7 +3504,7 @@ func TestReconcileLoadBalancerCommon(t *testing.T) {
 		},
 	}
 
-	service5 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80)
+	service5 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80)
 	slb5 := getTestLoadBalancerDualStack(pointer.String("testCluster"), pointer.String("rg"), pointer.String("testCluster"), pointer.String("aservice1"), service5, "Standard")
 	slb5.FrontendIPConfigurations = &[]network.FrontendIPConfiguration{
 		{
@@ -3607,7 +3607,7 @@ func TestReconcileLoadBalancerCommon(t *testing.T) {
 		},
 	}
 
-	service6 := getTestServiceDualStack("service1", v1.ProtocolUDP, nil, 80)
+	service6 := getTestServiceDualStack("service1", v1.ProtocolUDP, nil, nil, 80)
 	lb6 := getTestLoadBalancerDualStack(pointer.String("testCluster"), pointer.String("rg"), pointer.String("testCluster"), pointer.String("aservice1"), service6, "basic")
 	lb6.FrontendIPConfigurations = &[]network.FrontendIPConfiguration{}
 	lb6.Probes = &[]network.Probe{}
@@ -3634,7 +3634,7 @@ func TestReconcileLoadBalancerCommon(t *testing.T) {
 		},
 	}
 
-	service7 := getTestServiceDualStack("service1", v1.ProtocolUDP, nil, 80)
+	service7 := getTestServiceDualStack("service1", v1.ProtocolUDP, nil, nil, 80)
 	service7.Spec.HealthCheckNodePort = 10081
 	service7.Spec.ExternalTrafficPolicy = v1.ServiceExternalTrafficPolicyTypeLocal
 	lb7 := getTestLoadBalancerDualStack(pointer.String("testCluster"), pointer.String("rg"), pointer.String("testCluster"), pointer.String("aservice1"), service7, "basic")
@@ -3692,7 +3692,7 @@ func TestReconcileLoadBalancerCommon(t *testing.T) {
 		},
 	}
 
-	service8 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80)
+	service8 := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80)
 	lb8 := getTestLoadBalancerDualStack(pointer.String("testCluster"), pointer.String("anotherRG"), pointer.String("testCluster"), pointer.String("aservice1"), service8, "Standard")
 	lb8.FrontendIPConfigurations = &[]network.FrontendIPConfiguration{}
 	lb8.Probes = &[]network.Probe{}
@@ -3940,7 +3940,7 @@ func TestGetServiceLoadBalancerStatus(t *testing.T) {
 
 	az := GetTestCloud(ctrl)
 	// service has the same IP family as internalService.
-	service := getTestService("service1", v1.ProtocolTCP, nil, false, 80)
+	service := getTestService("service1", v1.ProtocolTCP, nil, nil, false, 80)
 	internalService := getInternalTestService("service1", 80)
 	v4Enabled, v6Enabled := getIPFamiliesEnabled(&service)
 
@@ -4098,25 +4098,25 @@ func TestReconcileSecurityGroupCommon(t *testing.T) {
 		},
 		{
 			desc:          "reconcileSecurityGroup shall report error if no such sg can be found",
-			service:       getTestServiceDualStack("test1", v1.ProtocolTCP, nil, 80),
+			service:       getTestServiceDualStack("test1", v1.ProtocolTCP, nil, nil, 80),
 			expectedError: true,
 		},
 		{
 			desc:          "reconcileSecurityGroup shall report error if wantLb is true and lbIPs is nil",
-			service:       getTestServiceDualStack("test1", v1.ProtocolTCP, nil, 80),
+			service:       getTestServiceDualStack("test1", v1.ProtocolTCP, nil, nil, 80),
 			wantLb:        true,
 			existingSgs:   map[string]network.SecurityGroup{"nsg": {}},
 			expectedError: true,
 		},
 		{
 			desc:        "reconcileSecurityGroup shall remain the existingSgs intact if nothing needs to be modified",
-			service:     getTestServiceDualStack("test1", v1.ProtocolTCP, nil, 80),
+			service:     getTestServiceDualStack("test1", v1.ProtocolTCP, nil, nil, 80),
 			existingSgs: map[string]network.SecurityGroup{"nsg": {}},
 			expectedSg:  &network.SecurityGroup{},
 		},
 		{
 			desc:    "reconcileSecurityGroup shall delete unwanted sg if wantLb is false and lbIPs is nil",
-			service: getTestServiceDualStack("test1", v1.ProtocolTCP, nil, 80),
+			service: getTestServiceDualStack("test1", v1.ProtocolTCP, nil, nil, 80),
 			existingSgs: map[string]network.SecurityGroup{"nsg": {
 				Name: pointer.String("nsg"),
 				SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
@@ -4143,7 +4143,7 @@ func TestReconcileSecurityGroupCommon(t *testing.T) {
 		},
 		{
 			desc:    "reconcileSecurityGroup shall delete unwanted sgs and create needed ones",
-			service: getTestServiceDualStack("test1", v1.ProtocolTCP, nil, 80),
+			service: getTestServiceDualStack("test1", v1.ProtocolTCP, nil, nil, 80),
 			existingSgs: map[string]network.SecurityGroup{"nsg": {
 				Name: pointer.String("nsg"),
 				SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
@@ -4198,7 +4198,7 @@ func TestReconcileSecurityGroupCommon(t *testing.T) {
 		},
 		{
 			desc:    "reconcileSecurityGroup shall create sgs with correct destinationPrefix for IPv6 only",
-			service: getTestService("test1", v1.ProtocolTCP, nil, true, 80),
+			service: getTestService("test1", v1.ProtocolTCP, nil, nil, true, 80),
 			existingSgs: map[string]network.SecurityGroup{"nsg": {
 				Name:                          pointer.String("nsg"),
 				SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{},
@@ -4228,7 +4228,7 @@ func TestReconcileSecurityGroupCommon(t *testing.T) {
 		},
 		{
 			desc:    "reconcileSecurityGroup shall create sgs with correct destinationPrefix for Dual-stack",
-			service: getTestServiceDualStack("test1", v1.ProtocolTCP, nil, 80),
+			service: getTestServiceDualStack("test1", v1.ProtocolTCP, nil, nil, 80),
 			existingSgs: map[string]network.SecurityGroup{"nsg": {
 				Name:                          pointer.String("nsg"),
 				SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{},
@@ -4271,7 +4271,7 @@ func TestReconcileSecurityGroupCommon(t *testing.T) {
 		},
 		{
 			desc:    "reconcileSecurityGroup shall create sgs with correct destinationPrefix with additional public IPs",
-			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationAdditionalPublicIPs: "2.3.4.5,fd00::eef1"}, 80),
+			service: getTestServiceDualStack("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationAdditionalPublicIPs: "2.3.4.5,fd00::eef1"}, nil, 80),
 			existingSgs: map[string]network.SecurityGroup{"nsg": {
 				Name:                          pointer.String("nsg"),
 				SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{},
@@ -4314,7 +4314,7 @@ func TestReconcileSecurityGroupCommon(t *testing.T) {
 		},
 		{
 			desc:    "reconcileSecurityGroup shall not create unwanted security rules if there is service tags",
-			service: getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationAllowedServiceTag: "tag"}, false, 80),
+			service: getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationAllowedServiceTag: "tag"}, nil, false, 80),
 			wantLb:  true,
 			lbIPs:   &[]string{"1.1.1.1"},
 			existingSgs: map[string]network.SecurityGroup{"nsg": {
@@ -4356,7 +4356,7 @@ func TestReconcileSecurityGroupCommon(t *testing.T) {
 		},
 		{
 			desc:    "reconcileSecurityGroup shall create shared sgs for service with azure-shared-securityrule annotations",
-			service: getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationSharedSecurityRule: "true"}, false, 80),
+			service: getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationSharedSecurityRule: "true"}, nil, false, 80),
 			existingSgs: map[string]network.SecurityGroup{"nsg": {
 				Name:                          pointer.String("nsg"),
 				SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{},
@@ -4386,7 +4386,7 @@ func TestReconcileSecurityGroupCommon(t *testing.T) {
 		},
 		{
 			desc:    "reconcileSecurityGroup shall delete shared sgs for service with azure-shared-securityrule annotations",
-			service: getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationSharedSecurityRule: "true"}, false, 80),
+			service: getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationSharedSecurityRule: "true"}, nil, false, 80),
 			existingSgs: map[string]network.SecurityGroup{"nsg": {
 				Name: pointer.String("nsg"),
 				SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
@@ -4418,7 +4418,7 @@ func TestReconcileSecurityGroupCommon(t *testing.T) {
 		},
 		{
 			desc:    "reconcileSecurityGroup shall delete shared sgs destination for service with azure-shared-securityrule annotations",
-			service: getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationSharedSecurityRule: "true"}, false, 80),
+			service: getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationSharedSecurityRule: "true"}, nil, false, 80),
 			existingSgs: map[string]network.SecurityGroup{"nsg": {
 				Name: pointer.String("nsg"),
 				SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{
@@ -4464,7 +4464,7 @@ func TestReconcileSecurityGroupCommon(t *testing.T) {
 		},
 		{
 			desc:    "reconcileSecurityGroup shall create sgs with floating IP disabled",
-			service: getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationDisableLoadBalancerFloatingIP: "true"}, false, 80),
+			service: getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationDisableLoadBalancerFloatingIP: "true"}, nil, false, 80),
 			existingSgs: map[string]network.SecurityGroup{"nsg": {
 				Name:                          pointer.String("nsg"),
 				SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{},
@@ -4495,7 +4495,7 @@ func TestReconcileSecurityGroupCommon(t *testing.T) {
 		},
 		{
 			desc:    "reconcileSecurityGroup shall create sgs with only IPv6 destination addresses for IPv6 services with floating IP disabled",
-			service: getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationDisableLoadBalancerFloatingIP: "true"}, true, 80),
+			service: getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationDisableLoadBalancerFloatingIP: "true"}, nil, true, 80),
 			existingSgs: map[string]network.SecurityGroup{"nsg": {
 				Name:                          pointer.String("nsg"),
 				SecurityGroupPropertiesFormat: &network.SecurityGroupPropertiesFormat{},
@@ -4558,7 +4558,7 @@ func TestReconcileSecurityGroupLoadBalancerSourceRanges(t *testing.T) {
 	defer ctrl.Finish()
 
 	az := GetTestCloud(ctrl)
-	service := getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationDenyAllExceptLoadBalancerSourceRanges: "true"}, false, 80)
+	service := getTestService("test1", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationDenyAllExceptLoadBalancerSourceRanges: "true"}, nil, false, 80)
 	service.Spec.LoadBalancerSourceRanges = []string{"1.2.3.4/32"}
 	existingSg := network.SecurityGroup{
 		Name: pointer.String("nsg"),
@@ -4679,7 +4679,7 @@ func TestSafeDeletePublicIP(t *testing.T) {
 				},
 			})
 			assert.NoError(t, err.Error())
-			service := getTestService("test1", v1.ProtocolTCP, nil, false, 80)
+			service := getTestService("test1", v1.ProtocolTCP, nil, nil, false, 80)
 			if test.listError == nil {
 				mockLBsClient := mockloadbalancerclient.NewMockInterface(ctrl)
 				mockLBsClient.EXPECT().CreateOrUpdate(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -5229,7 +5229,7 @@ func TestReconcilePublicIPsCommon(t *testing.T) {
 			if test.expectedClientGet != nil {
 				(*test.expectedClientGet)(mockPIPsClient)
 			}
-			service := getTestServiceDualStack("test1", v1.ProtocolTCP, nil, 80)
+			service := getTestServiceDualStack("test1", v1.ProtocolTCP, nil, nil, 80)
 			service.Annotations = test.annotations
 			for _, pip := range test.existingPIPs {
 				savedPips[*pip.Name] = pip
@@ -5716,7 +5716,7 @@ func TestEnsurePublicIPExistsCommon(t *testing.T) {
 				az.LoadBalancerSku = consts.LoadBalancerSkuStandard
 			}
 
-			service := getTestService("test1", v1.ProtocolTCP, nil, test.isIPv6, 80)
+			service := getTestService("test1", v1.ProtocolTCP, nil, nil, test.isIPv6, 80)
 			service.ObjectMeta.Annotations = test.additionalAnnotations
 			mockPIPsClient := az.PublicIPAddressesClient.(*mockpublicipclient.MockInterface)
 			if test.shouldPutPIP {
@@ -5775,7 +5775,7 @@ func TestEnsurePublicIPExistsWithExtendedLocation(t *testing.T) {
 
 	az := GetTestCloudWithExtendedLocation(ctrl)
 	az.LoadBalancerSku = consts.LoadBalancerSkuStandard
-	service := getTestServiceDualStack("test1", v1.ProtocolTCP, nil, 80)
+	service := getTestServiceDualStack("test1", v1.ProtocolTCP, nil, nil, 80)
 
 	exLocName := "microsoftlosangeles1"
 
@@ -5907,7 +5907,7 @@ func TestShouldUpdateLoadBalancer(t *testing.T) {
 		t.Run(test.desc, func(t *testing.T) {
 			az := GetTestCloud(ctrl)
 			az.LoadBalancerSku = consts.LoadBalancerSkuBasic
-			service := getTestService("test1", v1.ProtocolTCP, nil, false, 80)
+			service := getTestService("test1", v1.ProtocolTCP, nil, nil, false, 80)
 			v4Enabled, v6Enabled := getIPFamiliesEnabled(&service)
 			service.Spec.Type = test.serviceType
 			setMockPublicIPs(az, ctrl, 1, v4Enabled, v6Enabled)
@@ -6032,7 +6032,7 @@ func TestIsBackendPoolPreConfigured(t *testing.T) {
 			if test.isInternalService {
 				service = getInternalTestService("test", 80)
 			} else {
-				service = getTestService("test", v1.ProtocolTCP, nil, false, 80)
+				service = getTestService("test", v1.ProtocolTCP, nil, nil, false, 80)
 			}
 
 			isPreConfigured := az.isBackendPoolPreConfigured(&service)
@@ -6097,7 +6097,7 @@ func TestUnbindServiceFromPIP(t *testing.T) {
 		{Tags: map[string]*string{consts.ServiceTagKey: pointer.String("ns1/svc1,ns2/svc2")}},
 	}
 	serviceName := "ns2/svc2"
-	service := getTestService(serviceName, v1.ProtocolTCP, nil, false, 80)
+	service := getTestService(serviceName, v1.ProtocolTCP, nil, nil, false, 80)
 	setServiceLoadBalancerIP(&service, "1.2.3.4")
 	expectedTags := []map[string]*string{
 		nil,
@@ -6116,7 +6116,7 @@ func TestIsFrontendIPConfigIsUnsafeToDelete(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	service := getTestService("service1", v1.ProtocolTCP, nil, false, 80)
+	service := getTestService("service1", v1.ProtocolTCP, nil, nil, false, 80)
 	az := GetTestCloud(ctrl)
 	fipID := pointer.String("fip")
 
@@ -6228,7 +6228,7 @@ func TestCheckLoadBalancerResourcesConflicted(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	service := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, 80)
+	service := getTestServiceDualStack("service1", v1.ProtocolTCP, nil, nil, 80)
 	az := GetTestCloud(ctrl)
 
 	testCases := []struct {
@@ -6581,7 +6581,7 @@ func TestRemoveFrontendIPConfigurationFromLoadBalancerDelete(t *testing.T) {
 				PrivateIPAddressVersion: network.IPv4,
 			},
 		}
-		service := getTestService("svc1", v1.ProtocolTCP, nil, false, 80)
+		service := getTestService("svc1", v1.ProtocolTCP, nil, nil, false, 80)
 		lb := getTestLoadBalancer(pointer.String("lb"), pointer.String("rg"), pointer.String("testCluster"), pointer.String("testCluster"), service, "standard")
 		bid := "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Network/networkInterfaces/k8s-agentpool1-00000000-nic-0/ipConfigurations/ipconfig1"
 		lb.BackendAddressPools = &[]network.BackendAddressPool{
@@ -6623,7 +6623,7 @@ func TestRemoveFrontendIPConfigurationFromLoadBalancerUpdate(t *testing.T) {
 				PrivateIPAddressVersion: network.IPv4,
 			},
 		}
-		service := getTestService("svc1", v1.ProtocolTCP, nil, false, 80)
+		service := getTestService("svc1", v1.ProtocolTCP, nil, nil, false, 80)
 		lb := getTestLoadBalancer(pointer.String("lb"), pointer.String("rg"), pointer.String("testCluster"), pointer.String("testCluster"), service, "standard")
 		*lb.FrontendIPConfigurations = append(*lb.FrontendIPConfigurations, network.FrontendIPConfiguration{Name: pointer.String("fip1")})
 		cloud := GetTestCloud(ctrl)
@@ -6656,7 +6656,7 @@ func TestCleanOrphanedLoadBalancerLBInUseByVMSS(t *testing.T) {
 		mockVMSSClient := cloud.VirtualMachineScaleSetsClient.(*mockvmssclient.MockInterface)
 		mockVMSSClient.EXPECT().List(gomock.Any(), "rg").Return([]compute.VirtualMachineScaleSet{expectedVMSS}, nil)
 
-		service := getTestService("test", v1.ProtocolTCP, nil, false, 80)
+		service := getTestService("test", v1.ProtocolTCP, nil, nil, false, 80)
 		lb := getTestLoadBalancer(pointer.String("test"), pointer.String("rg"), pointer.String("test"), pointer.String("test"), service, consts.LoadBalancerSkuStandard)
 		(*lb.BackendAddressPools)[0].ID = pointer.String(testLBBackendpoolID0)
 
@@ -6673,7 +6673,7 @@ func TestCleanOrphanedLoadBalancerLBInUseByVMSS(t *testing.T) {
 		cloud.VMSet = vmss
 		cloud.LoadBalancerSku = consts.LoadBalancerSkuStandard
 
-		service := getTestService("test", v1.ProtocolTCP, nil, false, 80)
+		service := getTestService("test", v1.ProtocolTCP, nil, nil, false, 80)
 		lb := getTestLoadBalancer(pointer.String("test"), pointer.String("rg"), pointer.String("test"), pointer.String("test"), service, consts.LoadBalancerSkuStandard)
 		(*lb.BackendAddressPools)[0].ID = pointer.String(testLBBackendpoolID0)
 
@@ -6705,7 +6705,7 @@ func TestReconcileZonesForFrontendIPConfigs(t *testing.T) {
 	}{
 		{
 			description:               "reconcileFrontendIPConfigs should reconcile the zones for the new fip config",
-			service:                   getTestServiceDualStack("test", v1.ProtocolTCP, nil, 80),
+			service:                   getTestServiceDualStack("test", v1.ProtocolTCP, nil, nil, 80),
 			existingFrontendIPConfigs: []network.FrontendIPConfiguration{},
 			existingPIPV4:             network.PublicIPAddress{Name: pointer.String("testCluster-atest"), Location: pointer.String("eastus")},
 			existingPIPV6:             network.PublicIPAddress{Name: pointer.String("testCluster-atest-IPv6"), Location: pointer.String("eastus")},
@@ -6882,7 +6882,7 @@ func TestReconcileFrontendIPConfigs(t *testing.T) {
 	}{
 		{
 			desc:    "DualStack Service reconciles existing FIPs and does not touch others, not dirty",
-			service: getTestServiceDualStack("test", v1.ProtocolTCP, nil, 80),
+			service: getTestServiceDualStack("test", v1.ProtocolTCP, nil, nil, 80),
 			existingFIPs: []network.FrontendIPConfiguration{
 				{
 					Name: pointer.String("fipV4"),
@@ -7011,7 +7011,7 @@ func TestReconcileFrontendIPConfigs(t *testing.T) {
 		},
 		{
 			desc:    "DualStack Service reconciles existing FIPs, wantLB == false, but an FIP ID is empty, should return error",
-			service: getTestServiceDualStack("test", v1.ProtocolTCP, nil, 80),
+			service: getTestServiceDualStack("test", v1.ProtocolTCP, nil, nil, 80),
 			existingFIPs: []network.FrontendIPConfiguration{
 				{
 					Name: pointer.String("atest"),
@@ -7037,7 +7037,7 @@ func TestReconcileFrontendIPConfigs(t *testing.T) {
 		},
 		{
 			desc:    "IPv6 Service with existing IPv4 FIP",
-			service: getTestService("test", v1.ProtocolTCP, nil, true, 80),
+			service: getTestService("test", v1.ProtocolTCP, nil, nil, true, 80),
 			existingFIPs: []network.FrontendIPConfiguration{
 				{
 					Name: pointer.String("fipV4"),
@@ -7156,7 +7156,7 @@ func TestReconcileIPSettings(t *testing.T) {
 					PublicIPAllocationMethod: network.Static,
 				},
 			},
-			service:                  getTestService("test", v1.ProtocolTCP, nil, false, 80),
+			service:                  getTestService("test", v1.ProtocolTCP, nil, nil, false, 80),
 			isIPv6:                   false,
 			expectedChanged:          false,
 			expectedIPVersion:        network.IPv4,
@@ -7171,7 +7171,7 @@ func TestReconcileIPSettings(t *testing.T) {
 					PublicIPAllocationMethod: network.Static,
 				},
 			},
-			service:                  getTestService("test", v1.ProtocolTCP, nil, false, 80),
+			service:                  getTestService("test", v1.ProtocolTCP, nil, nil, false, 80),
 			isIPv6:                   false,
 			expectedChanged:          true,
 			expectedIPVersion:        network.IPv4,
@@ -7186,7 +7186,7 @@ func TestReconcileIPSettings(t *testing.T) {
 					PublicIPAllocationMethod: network.Dynamic,
 				},
 			},
-			service:                  getTestService("test", v1.ProtocolTCP, nil, true, 80),
+			service:                  getTestService("test", v1.ProtocolTCP, nil, nil, true, 80),
 			isIPv6:                   true,
 			expectedChanged:          true,
 			expectedIPVersion:        network.IPv6,
@@ -7201,7 +7201,7 @@ func TestReconcileIPSettings(t *testing.T) {
 					PublicIPAllocationMethod: network.Static,
 				},
 			},
-			service:                  getTestService("test", v1.ProtocolTCP, nil, true, 80),
+			service:                  getTestService("test", v1.ProtocolTCP, nil, nil, true, 80),
 			isIPv6:                   true,
 			expectedChanged:          true,
 			expectedIPVersion:        network.IPv6,
@@ -7399,7 +7399,7 @@ func TestSafeDeleteLoadBalancer(t *testing.T) {
 					cloud.nodesWithCorrectLoadBalancerByPrimaryVMSet.Store(nodeName, sets.Empty{})
 				}
 			}
-			svc := getTestService("svc", v1.ProtocolTCP, nil, false, 80)
+			svc := getTestService("svc", v1.ProtocolTCP, nil, nil, false, 80)
 			lb := network.LoadBalancer{
 				Name: pointer.String("test"),
 				LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
@@ -7471,7 +7471,7 @@ func TestGetEligibleLoadBalancers(t *testing.T) {
 	}{
 		{
 			description: "should respect service annotation",
-			svc:         getTestService("test", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationLoadBalancerConfigurations: "A ,b"}, false),
+			svc:         getTestService("test", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationLoadBalancerConfigurations: "A ,b"}, nil, false),
 			lbConfigs: []MultipleStandardLoadBalancerConfiguration{
 				{
 					Name: "a",
@@ -7486,7 +7486,7 @@ func TestGetEligibleLoadBalancers(t *testing.T) {
 		},
 		{
 			description: "should report an error if a service selects a load balancer that is not defined in the configuration",
-			svc:         getTestService("test", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationLoadBalancerConfigurations: "b"}, false),
+			svc:         getTestService("test", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationLoadBalancerConfigurations: "b"}, nil, false),
 			lbConfigs: []MultipleStandardLoadBalancerConfiguration{
 				{
 					Name: "a",
@@ -7501,7 +7501,7 @@ func TestGetEligibleLoadBalancers(t *testing.T) {
 		},
 		{
 			description: "should respect namespace selector",
-			svc:         getTestService("test", v1.ProtocolTCP, nil, false),
+			svc:         getTestService("test", v1.ProtocolTCP, nil, nil, false),
 			lbConfigs: []MultipleStandardLoadBalancerConfiguration{
 				{
 					Name: "a",
@@ -7530,7 +7530,7 @@ func TestGetEligibleLoadBalancers(t *testing.T) {
 		},
 		{
 			description: "should respect label selector",
-			svc:         getTestService("test", v1.ProtocolTCP, nil, false),
+			svc:         getTestService("test", v1.ProtocolTCP, nil, nil, false),
 			labels:      map[string]string{"k2": "v2", "k3": "v3"},
 			lbConfigs: []MultipleStandardLoadBalancerConfiguration{
 				{
@@ -7554,7 +7554,7 @@ func TestGetEligibleLoadBalancers(t *testing.T) {
 		},
 		{
 			description: "should return the intersection of annotation, namespace and label selector",
-			svc:         getTestService("test", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationLoadBalancerConfigurations: "a,b"}, false),
+			svc:         getTestService("test", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationLoadBalancerConfigurations: "a,b"}, nil, false),
 			labels:      map[string]string{"k2": "v2"},
 			lbConfigs: []MultipleStandardLoadBalancerConfiguration{
 				{
@@ -7607,7 +7607,7 @@ func TestGetEligibleLoadBalancers(t *testing.T) {
 		},
 		{
 			description: "should return an error if there is no matching lb config",
-			svc:         getTestService("test", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationLoadBalancerConfigurations: "a,b,c"}, false),
+			svc:         getTestService("test", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationLoadBalancerConfigurations: "a,b,c"}, nil, false),
 			lbConfigs: []MultipleStandardLoadBalancerConfiguration{
 				{
 					Name: "a",
@@ -7663,7 +7663,7 @@ func TestGetEligibleLoadBalancers(t *testing.T) {
 		},
 		{
 			description: "should report an error if failed to convert label selector as a selector",
-			svc:         getTestService("test", v1.ProtocolTCP, nil, false),
+			svc:         getTestService("test", v1.ProtocolTCP, nil, nil, false),
 			lbConfigs: []MultipleStandardLoadBalancerConfiguration{
 				{
 					Name: "a",
@@ -7684,7 +7684,7 @@ func TestGetEligibleLoadBalancers(t *testing.T) {
 		},
 		{
 			description: "should report an error if failed to convert namespace selector as a selector",
-			svc:         getTestService("test", v1.ProtocolTCP, nil, false),
+			svc:         getTestService("test", v1.ProtocolTCP, nil, nil, false),
 			lbConfigs: []MultipleStandardLoadBalancerConfiguration{
 				{
 					Name: "a",
@@ -7705,7 +7705,7 @@ func TestGetEligibleLoadBalancers(t *testing.T) {
 		},
 		{
 			description: "should respect allowServicePlacement flag",
-			svc:         getTestService("test", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationLoadBalancerConfigurations: "a,c"}, false),
+			svc:         getTestService("test", v1.ProtocolTCP, map[string]string{consts.ServiceAnnotationLoadBalancerConfigurations: "a,c"}, nil, false),
 			lbConfigs: []MultipleStandardLoadBalancerConfiguration{
 				{
 					Name: "a",
@@ -7908,7 +7908,7 @@ func TestGetAzureLoadBalancerName(t *testing.T) {
 			}
 
 			az.Config.LoadBalancerName = c.lbName
-			svc := getTestService("test", v1.ProtocolTCP, c.serviceAnnotation, false)
+			svc := getTestService("test", v1.ProtocolTCP, c.serviceAnnotation, nil, false)
 			if c.serviceLabel != nil {
 				svc.Labels = c.serviceLabel
 			}
@@ -8106,7 +8106,7 @@ func TestReconcileMultipleStandardLoadBalancerConfigurations(t *testing.T) {
 				}
 			}
 
-			svc := getTestService("test", v1.ProtocolTCP, nil, false)
+			svc := getTestService("test", v1.ProtocolTCP, nil, nil, false)
 			err := az.reconcileMultipleStandardLoadBalancerConfigurations(&existingLBs, &svc, "kubernetes", &existingLBs, tc.nodes)
 			assert.Equal(t, err, tc.expectedErr)
 
@@ -8931,7 +8931,7 @@ func TestReconcileMultipleStandardLoadBalancerNodes(t *testing.T) {
 			ss.DisableAvailabilitySetNodes = true
 			az.VMSet = ss
 			az.MultipleStandardLoadBalancerConfigurations = tc.existingLBConfigs
-			svc := getTestService("test", v1.ProtocolTCP, nil, false)
+			svc := getTestService("test", v1.ProtocolTCP, nil, nil, false)
 			_ = az.reconcileMultipleStandardLoadBalancerBackendNodes(tc.lbName, &tc.existingLBs, &svc, tc.existingNodes)
 
 			expectedLBToNodesMap := make(map[string]sets.Set[string])
@@ -9043,7 +9043,7 @@ func TestReconcileBackendPoolHosts(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	svc := getTestService("test", v1.ProtocolTCP, nil, false)
+	svc := getTestService("test", v1.ProtocolTCP, nil, nil, false)
 	lbBackendPoolIDs := map[bool]string{false: "id"}
 	clusterName := "kubernetes"
 	ips := []string{"10.0.0.1"}
