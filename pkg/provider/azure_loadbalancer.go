@@ -4293,20 +4293,6 @@ func (az *Cloud) getEligibleLoadBalancersForService(service *v1.Service) ([]stri
 	}
 
 	serviceName := getServiceName(service)
-	if len(eligibleLBs) == 0 {
-		return []string{}, fmt.Errorf(
-			"service %q selects %d load balancers (%s), but %d of them (%s) have AllowServicePlacement set to false and the service is not using any of them, %d of them (%s) do not match the service label selector, and %d of them (%s) do not match the service namespace selector",
-			serviceName,
-			len(lbSelectedByAnnotation),
-			strings.Join(lbSelectedByAnnotation, ", "),
-			len(lbFailedPlacementFlag),
-			strings.Join(lbFailedPlacementFlag, ", "),
-			len(lbFailedLabelSelector),
-			strings.Join(lbFailedLabelSelector, ", "),
-			len(lbFailedNamespaceSelector),
-			strings.Join(lbFailedNamespaceSelector, ", "),
-		)
-	}
 
 	// If the service passes any selector, only make them eligible.
 	// Otherwise, make them all LBs eligible without selectors.
@@ -4321,6 +4307,20 @@ func (az *Cloud) getEligibleLoadBalancersForService(service *v1.Service) ([]stri
 			if !slices.Contains(lbFailedAnySelector, eligibleLB.Name) {
 				eligibleLBNames = append(eligibleLBNames, eligibleLB.Name)
 			}
+		}
+		if len(eligibleLBNames) == 0 {
+			return []string{}, fmt.Errorf(
+				"service %q selects %d load balancers (%s), but %d of them (%s) have AllowServicePlacement set to false and the service is not using any of them, %d of them (%s) do not match the service label selector, and %d of them (%s) do not match the service namespace selector",
+				serviceName,
+				len(lbSelectedByAnnotation),
+				strings.Join(lbSelectedByAnnotation, ", "),
+				len(lbFailedPlacementFlag),
+				strings.Join(lbFailedPlacementFlag, ", "),
+				len(lbFailedLabelSelector),
+				strings.Join(lbFailedLabelSelector, ", "),
+				len(lbFailedNamespaceSelector),
+				strings.Join(lbFailedNamespaceSelector, ", "),
+			)
 		}
 	}
 
