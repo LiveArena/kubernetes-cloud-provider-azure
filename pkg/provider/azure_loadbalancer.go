@@ -4203,6 +4203,10 @@ func (az *Cloud) getEligibleLoadBalancersForService(service *v1.Service) ([]stri
 		lbFailedLabelSelector     []string
 		lbFailedNamespaceSelector []string
 		lbFailedPlacementFlag     []string
+		lbPassedLabelSelector     []string
+		lbPassedNamespaceSelector []string
+		lbPassedAnySelector       []string
+		lbFailedAnySelector       []string
 	)
 
 	// 1. Service selects LBs defined in the annotation.
@@ -4252,11 +4256,14 @@ func (az *Cloud) getEligibleLoadBalancersForService(service *v1.Service) ([]stri
 				klog.Errorf("Failed to parse label selector %q for load balancer %q: %s", eligibleLB.ServiceLabelSelector.String(), eligibleLB.Name, err.Error())
 				return []string{}, err
 			}
-			if !serviceLabelSelector.Matches(labels.Set(service.Labels)) {
+			if serviceLabelSelector.Matches(labels.Set(service.Labels)) {
+				klog.V(2).Infof("getEligibleLoadBalancersForService: service %q matches label selector %q for load balancer %q", service.Name, eligibleLB.ServiceLabelSelector.String(), eligibleLB.Name)
+				lbPassedLabelSelector = append(lbPassedLabelSelector, eligibleLB.Name)
+				lbPassedAnySelector = append(lbPassedAnySelector, eligibleLB.Name)
+			} else {
 				klog.V(2).Infof("getEligibleLoadBalancersForService: service %q does not match label selector %q for load balancer %q", service.Name, eligibleLB.ServiceLabelSelector.String(), eligibleLB.Name)
-				eligibleLBs = append(eligibleLBs[:i], eligibleLBs[i+1:]...)
 				lbFailedLabelSelector = append(lbFailedLabelSelector, eligibleLB.Name)
-				continue
+				lbFailedAnySelector = append(lbFailedAnySelector, eligibleLB.Name)
 			}
 		}
 
@@ -4273,11 +4280,14 @@ func (az *Cloud) getEligibleLoadBalancersForService(service *v1.Service) ([]stri
 				klog.Errorf("Failed to get namespace %q for load balancer %q: %s", service.Namespace, eligibleLB.Name, err.Error())
 				return []string{}, err
 			}
-			if !serviceNamespaceSelector.Matches(labels.Set(ns.Labels)) {
+			if serviceNamespaceSelector.Matches(labels.Set(ns.Labels)) {
+				klog.V(2).Infof("getEligibleLoadBalancersForService: namespace %q matches namespace selector %q for load balancer %q", service.Namespace, eligibleLB.ServiceNamespaceSelector.String(), eligibleLB.Name)
+				lbPassedNamespaceSelector = append(lbPassedNamespaceSelector, eligibleLB.Name)
+				lbPassedAnySelector = append(lbPassedAnySelector, eligibleLB.Name)
+			} else {
 				klog.V(2).Infof("getEligibleLoadBalancersForService: namespace %q does not match namespace selector %q for load balancer %q", service.Namespace, eligibleLB.ServiceNamespaceSelector.String(), eligibleLB.Name)
-				eligibleLBs = append(eligibleLBs[:i], eligibleLBs[i+1:]...)
 				lbFailedNamespaceSelector = append(lbFailedNamespaceSelector, eligibleLB.Name)
-				continue
+				lbFailedAnySelector = append(lbFailedAnySelector, eligibleLB.Name)
 			}
 		}
 	}
@@ -4298,8 +4308,20 @@ func (az *Cloud) getEligibleLoadBalancersForService(service *v1.Service) ([]stri
 		)
 	}
 
-	for _, eligibleLB := range eligibleLBs {
-		eligibleLBNames = append(eligibleLBNames, eligibleLB.Name)
+	// If the service passes any selector, only make them eligible.
+	// Otherwise, make them all LBs eligible without selectors.
+	if len(lbPassedAnySelector) > 0 {
+		for _, eligibleLB := range lbPassedAnySelector {
+			if !slices.Contains(eligibleLBNames, eligibleLB) {
+				eligibleLBNames = append(eligibleLBNames, eligibleLB)
+			}
+		}
+	} else {
+		for _, eligibleLB := range eligibleLBs {
+			if !slices.Contains(lbFailedAnySelector, eligibleLB.Name) {
+				eligibleLBNames = append(eligibleLBNames, eligibleLB.Name)
+			}
+		}
 	}
 
 	return eligibleLBNames, nil
