@@ -7731,6 +7731,83 @@ func TestGetEligibleLoadBalancers(t *testing.T) {
 			},
 			expectedLBs: []string{"a", "c"},
 		},
+		{
+			description: "should respect service label selector for single placement",
+			svc:         getTestService("test", v1.ProtocolTCP, nil, map[string]string{"app.kubernetes.io/name": "test"}, false),
+			lbConfigs: []MultipleStandardLoadBalancerConfiguration{
+				{
+					Name: "a",
+					MultipleStandardLoadBalancerConfigurationSpec: MultipleStandardLoadBalancerConfigurationSpec{
+						AllowServicePlacement: pointer.Bool(false),
+					},
+					MultipleStandardLoadBalancerConfigurationStatus: MultipleStandardLoadBalancerConfigurationStatus{
+						ActiveServices: sets.New[string]("default/test"),
+					},
+				},
+				{
+					Name: "b",
+					MultipleStandardLoadBalancerConfigurationSpec: MultipleStandardLoadBalancerConfigurationSpec{
+						ServiceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"app.kubernetes.io/name": "test",
+							},
+							MatchExpressions: nil,
+						},
+					},
+				},
+				{
+					Name: "c",
+					MultipleStandardLoadBalancerConfigurationSpec: MultipleStandardLoadBalancerConfigurationSpec{},
+				},
+				{
+					Name: "d",
+					MultipleStandardLoadBalancerConfigurationSpec: MultipleStandardLoadBalancerConfigurationSpec{},
+				},
+			},
+			expectedLBs: []string{"b"},
+		},
+		{
+			description: "should respect service label selector for multiple placement",
+			svc:         getTestService("test", v1.ProtocolTCP, nil, map[string]string{"app.kubernetes.io/name": "test"}, false),
+			lbConfigs: []MultipleStandardLoadBalancerConfiguration{
+				{
+					Name: "a",
+					MultipleStandardLoadBalancerConfigurationSpec: MultipleStandardLoadBalancerConfigurationSpec{
+						AllowServicePlacement: pointer.Bool(false),
+					},
+					MultipleStandardLoadBalancerConfigurationStatus: MultipleStandardLoadBalancerConfigurationStatus{
+						ActiveServices: sets.New[string]("default/test"),
+					},
+				},
+				{
+					Name: "b",
+					MultipleStandardLoadBalancerConfigurationSpec: MultipleStandardLoadBalancerConfigurationSpec{
+						ServiceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"app.kubernetes.io/name": "test",
+							},
+							MatchExpressions: nil,
+						},
+					},
+				},
+				{
+					Name: "c",
+					MultipleStandardLoadBalancerConfigurationSpec: MultipleStandardLoadBalancerConfigurationSpec{},
+				},
+				{
+					Name: "d",
+					MultipleStandardLoadBalancerConfigurationSpec: MultipleStandardLoadBalancerConfigurationSpec{
+						ServiceLabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"app.kubernetes.io/name": "test",
+							},
+							MatchExpressions: nil,
+						},
+					},
+				},
+			},
+			expectedLBs: []string{"d", "b"},
+		},
 	} {
 		t.Run(tc.description, func(t *testing.T) {
 			az := GetTestCloud(ctrl)
